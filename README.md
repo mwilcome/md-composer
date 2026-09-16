@@ -18,7 +18,7 @@ scripts\spawn.ps1
 
 `scripts\spawn.cmd` works, and so does `npm run create` if you'd rather answer the same questions in Node.
 
-Go into the new folder, `npm install`, `npm start`, open http://localhost:4200. This repo stays the template, the script copies it. The new app can `npm test` (Vitest) and `npm run build`, and what you actually publish is `dist/<name>/browser`. Keep Netlify and the SPA rewrite is already in `netlify.toml`.
+Go into the new folder, `npm install`, `npm start`, open http://localhost:4200. This repo stays the template, the script copies it. The new app can `npm run build`, and what you actually publish is `dist/<name>/browser`. Keep Netlify and the SPA rewrite is already in `netlify.toml`.
 
 ## What it asks
 
@@ -70,7 +70,6 @@ From the new app, or from here after `npm install`:
 npm run check
 npm install
 npm start
-npm test
 ```
 
 Dev server: http://localhost:4200
@@ -97,8 +96,7 @@ Import the GitHub repo in Netlify. `netlify.toml` publishes `dist/md-composer/br
 
 ## Routes
 
-- `/` Home
-- `/routing-example` a sample extra page, replace it
+- `/` Composer
 - anything else is Not found
 
 ## Coding agents

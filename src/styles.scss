@@ -1,7 +1,8 @@
 :root {
-  color-scheme: light dark;
-  font-family: system-ui, sans-serif;
+  color-scheme: light;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 *,
@@ -10,9 +11,15 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
-  padding: 1.25rem 1.5rem 2.5rem;
 }
 
 a {

@@ -9,6 +9,12 @@
 # Angular cache
 .angular/
 
+# Agent / skills installs (local only)
+.agents/
+.claude/
+.grok/
+.cursor/
+
 # Secrets (Angular CLI does not auto-load .env)
 .env
 .env.*

@@ -1,6 +1,10 @@
 :host {
-  display: block;
-  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .skip-link {
@@ -17,38 +21,9 @@
   top: 0.75rem;
 }
 
-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-  padding-block-end: 1rem;
-  margin-block-end: 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, CanvasText 16%, transparent);
-}
-
-.brand {
-  margin: 0;
-  font-weight: 650;
-}
-
-nav {
-  display: flex;
-  gap: 1rem;
-}
-
-nav a {
-  text-decoration: none;
-}
-
-nav a:hover,
-nav a:focus-visible,
-nav a.is-active {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
 main {
-  max-width: 42rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }

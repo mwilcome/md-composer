@@ -22,13 +22,15 @@ This checkout is a **template**. Two front doors, same engine (`scripts/create.m
 
 ## Generate
 
-Use `npx ng generate`. New components: standalone, `ChangeDetectionStrategy.OnPush`, `inject()` instead of constructor DI, `@if` / `@for` / `@switch`. Prefer `input()` / `input.required()` / `model()` / `httpResource` for GETs (`provideHttpClient()` is already in `app.config.ts`).
+Use `npx ng generate`. New components: standalone, `ChangeDetectionStrategy.OnPush`, `inject()` instead of constructor DI, `@if` / `@for` / `@switch`. Prefer `input()` / `input.required()` / `model()`. Add `provideHttpClient()` only when the app actually talks HTTP.
 
-Pages live under `src/app/pages/`. Shared identity is `src/app/core/site.ts` (`appName`, `appTitle`, `siteUrl`) — restamp it with `npm run create`, do not hardcode a personal domain.
+Domain layout: `composer/` is the only bounded context. The aggregate is `Draft` (body + selection). Markup commands live in `markup-command.ts`; `applyCommand` is `Draft × command → Draft`. `draft-store.ts` and `markdown-html.ts` are adapters. `Composer` is the one screen. `core/` is product identity. `not-found` sits next to `app.ts`. Do not add `pages/`, pane-component folders, or a `shell/` layer.
 
-Landing route is eager; `routing-example` and `**` are `loadComponent`. Keep the wildcard last. Route `title` values are composed by `AppTitleStrategy`.
+Shared identity is `src/app/core/site.ts` (`appName`, `appTitle`, `siteUrl`) — restamp it with `npm run create`, do not hardcode a personal domain.
 
-Tests use Vitest (`ng test` / `npm test`). Specs are short examples of zoneless TestBed tests (`await fixture.whenStable()`, not `detectChanges()`) and `RouterTestingHarness` for routes. They are not a product suite. Keep them green out of the box.
+Landing route is `Composer` (eager). `**` is `loadComponent` to `not-found`. Keep the wildcard last. Route `title` values are composed by `AppTitleStrategy`.
+
+Do not add tests unless asked. Do not run or exercise the application unless asked. `ng generate` skips specs (`skipTests`).
 
 ## Hosting
 
