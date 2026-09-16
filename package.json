@@ -1,7 +1,7 @@
 {
   "name": "md-composer",
   "version": "0.0.0",
-  "description": "Generic Angular 22 SPA starter for Netlify.",
+  "description": "Browser Markdown editor with live preview.",
   "license": "MIT",
   "scripts": {
     "ng": "ng",

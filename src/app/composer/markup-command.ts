@@ -23,6 +23,10 @@ export interface FenceCommand extends MarkupCommandBase {
   type: 'fence';
 }
 
+export interface FootnoteCommand extends MarkupCommandBase {
+  type: 'footnote';
+}
+
 export interface InsertCommand extends MarkupCommandBase {
   type: 'insert';
   insert: string;
@@ -31,7 +35,7 @@ export interface InsertCommand extends MarkupCommandBase {
   selectInserted?: { start: number; end: number };
 }
 
-export type MarkupCommand = WrapCommand | LinePrefixCommand | FenceCommand | InsertCommand;
+export type MarkupCommand = WrapCommand | LinePrefixCommand | FenceCommand | InsertCommand | FootnoteCommand;
 
 const TABLE_INSERT = '| Column 1 | Column 2 |\n| -------- | -------- |\n|          |          |\n';
 const DETAILS_INSERT = '<details>\n<summary>Summary</summary>\n\ncontent\n\n</details>\n';
@@ -67,12 +71,32 @@ export const MARKUP_COMMANDS: MarkupCommand[] = [
     placeholder: 'text',
   },
   { id: 'code', label: 'Code', group: 'Inline', type: 'wrap', prefix: '`', suffix: '`', placeholder: 'code', hint: 'Inline code (Ctrl+E)' },
+  {
+    id: 'highlight',
+    label: 'Highlight',
+    group: 'Inline',
+    type: 'wrap',
+    prefix: '==',
+    suffix: '==',
+    placeholder: 'text',
+    hint: 'Highlight',
+  },
 
   { id: 'ul', label: 'List', group: 'Blocks', type: 'linePrefix', prefix: '- ', hint: 'Bullet list · Tab to nest, Enter to continue' },
   { id: 'ol', label: 'Numbered', group: 'Blocks', type: 'linePrefix', prefix: '1. ', hint: 'Numbered list · Tab to nest, Enter to continue' },
   { id: 'task', label: 'Task', group: 'Blocks', type: 'linePrefix', prefix: '- [ ] ', hint: 'Task list (checkboxes) · Tab to nest, Enter to continue' },
   { id: 'quote', label: 'Quote', group: 'Blocks', type: 'linePrefix', prefix: '> ' },
-  { id: 'fence', label: 'Fence', group: 'Blocks', type: 'fence', hint: 'Code block' },
+  { id: 'fence', label: 'Fence', group: 'Blocks', type: 'fence', hint: 'Code block with language' },
+  {
+    id: 'alert',
+    label: 'Alert',
+    group: 'Blocks',
+    type: 'insert',
+    insert: '> [!NOTE]\n> ',
+    placement: 'below',
+    selectInserted: { start: 4, end: 8 },
+    hint: 'GitHub alert (NOTE, TIP, IMPORTANT, WARNING, CAUTION)',
+  },
 
   {
     id: 'link',
@@ -129,6 +153,7 @@ export const MARKUP_COMMANDS: MarkupCommand[] = [
     placeholder: 'comment',
   },
   { id: 'br', label: 'Break', group: 'Insert', type: 'insert', insert: '  \n', placement: 'atCaret', hint: 'Line break' },
+  { id: 'footnote', label: 'Footnote', group: 'Insert', type: 'footnote', hint: 'Footnote' },
 ];
 
 export const MARKUP_COMMAND_GROUPS: { name: string; commands: MarkupCommand[] }[] = [

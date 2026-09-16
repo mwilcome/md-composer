@@ -35,3 +35,27 @@ code {
   font-family: ui-monospace, monospace;
   font-size: 0.9em;
 }
+
+.task-item {
+  list-style: none;
+}
+
+ul:has(> .task-item) {
+  list-style: none;
+  padding-left: 0.35em;
+}
+
+.task-check {
+  display: inline-block;
+  margin-right: 0.4em;
+  font-size: 1.1em;
+  line-height: 1;
+  color: #656d76;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: -0.05em;
+}
+
+.task-check.is-done {
+  color: #0969da;
+}

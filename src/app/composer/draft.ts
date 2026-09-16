@@ -27,6 +27,8 @@ export function applyCommand(draft: Draft, command: MarkupCommand): DraftEdit {
       return applyFence(body, start, end);
     case 'insert':
       return applyInsert(body, start, end, command);
+    case 'footnote':
+      return applyFootnote(body, start, end);
     default: {
       const neverType: never = command;
       throw new Error(`Unknown markup command: ${JSON.stringify(neverType)}`);
@@ -40,29 +42,21 @@ function applyWrap(
   end: number,
   command: Extract<MarkupCommand, { type: 'wrap' }>,
 ): DraftEdit {
-  const { prefix, suffix } = command;
-  const unwrapInside =
-    start !== end &&
-    body.slice(start, start + prefix.length) === prefix &&
-    body.slice(end - suffix.length, end) === suffix &&
-    end - start >= prefix.length + suffix.length;
-  if (unwrapInside) {
-    const inner = body.slice(start + prefix.length, end - suffix.length);
-    return mutation(body, start, end, inner, { start, end: start + inner.length });
+  const unwrapped = tryUnwrap(body, start, end, command);
+  if (unwrapped) {
+    return unwrapped;
   }
-  const unwrapAround =
-    start >= prefix.length &&
-    end + suffix.length <= body.length &&
-    body.slice(start - prefix.length, start) === prefix &&
-    body.slice(end, end + suffix.length) === suffix;
-  if (unwrapAround) {
-    const inner = body.slice(start, end);
-    return mutation(body, start - prefix.length, end + suffix.length, inner, {
-      start: start - prefix.length,
-      end: start - prefix.length + inner.length,
-    });
+  const tight = excludeEdgeWhitespace(body, start, end);
+  if (tight.start !== start || tight.end !== end) {
+    const tightUnwrapped = tryUnwrap(body, tight.start, tight.end, command);
+    if (tightUnwrapped) {
+      return tightUnwrapped;
+    }
   }
+  start = tight.start;
+  end = tight.end;
 
+  const { prefix, suffix } = command;
   const hadSelection = start !== end;
   const selected = hadSelection ? body.slice(start, end) : command.placeholder;
   const insert = prefix + selected + suffix;
@@ -74,6 +68,58 @@ function applyWrap(
     selection = { start: urlStart, end: urlStart + 3 };
   }
   return mutation(body, start, end, insert, selection);
+}
+
+function tryUnwrap(
+  body: string,
+  start: number,
+  end: number,
+  command: Extract<MarkupCommand, { type: 'wrap' }>,
+): DraftEdit | null {
+  const { prefix, suffix } = command;
+  if (start === end) {
+    return null;
+  }
+  if (
+    body.slice(start, start + prefix.length) === prefix &&
+    body.slice(end - suffix.length, end) === suffix &&
+    end - start >= prefix.length + suffix.length
+  ) {
+    const inner = body.slice(start + prefix.length, end - suffix.length);
+    return mutation(body, start, end, inner, { start, end: start + inner.length });
+  }
+  if (
+    start >= prefix.length &&
+    end + suffix.length <= body.length &&
+    body.slice(start - prefix.length, start) === prefix &&
+    body.slice(end, end + suffix.length) === suffix
+  ) {
+    const inner = body.slice(start, end);
+    return mutation(body, start - prefix.length, end + suffix.length, inner, {
+      start: start - prefix.length,
+      end: start - prefix.length + inner.length,
+    });
+  }
+  return null;
+}
+
+/** Keep spaces between words outside *, **, ~~, ==, `, [] so adjacent marks don't merge. */
+function excludeEdgeWhitespace(body: string, start: number, end: number): { start: number; end: number } {
+  if (start === end) {
+    return { start, end };
+  }
+  let from = start;
+  let to = end;
+  while (from < to && /\s/.test(body.charAt(from))) {
+    from += 1;
+  }
+  while (to > from && /\s/.test(body.charAt(to - 1))) {
+    to -= 1;
+  }
+  if (from === to) {
+    return { start, end };
+  }
+  return { start: from, end: to };
 }
 
 function applyLinePrefix(
@@ -105,18 +151,46 @@ function applyLinePrefix(
 }
 
 function applyFence(body: string, start: number, end: number): DraftEdit {
+  const langStart = 3;
+  const langEnd = 7;
   if (start === end) {
     const newlineAt = body.indexOf('\n', end);
     const at = newlineAt === -1 ? body.length : newlineAt + 1;
     const lead = at === body.length && at > 0 && body[at - 1] !== '\n' ? '\n' : '';
-    const insert = lead + '```\n\n```\n';
-    const inner = at + lead.length + 4;
-    return mutation(body, at, at, insert, { start: inner, end: inner });
+    const insert = lead + '```lang\n\n```\n';
+    return mutation(body, at, at, insert, {
+      start: at + lead.length + langStart,
+      end: at + lead.length + langEnd,
+    });
   }
   const selected = body.slice(start, end);
-  const insert = '```\n' + selected + '\n```';
-  const inner = start + 4;
-  return mutation(body, start, end, insert, { start: inner, end: inner + selected.length });
+  const insert = '```lang\n' + selected + '\n```';
+  return mutation(body, start, end, insert, { start: start + langStart, end: start + langEnd });
+}
+
+function applyFootnote(body: string, start: number, end: number): DraftEdit {
+  const n = nextFootnoteIndex(body);
+  const marker = `[^${n}]`;
+  const definition = `[^${n}]: definition`;
+  const alreadyDefined = body.includes(`[^${n}]:`);
+  const after = body.slice(end);
+  const suffix = alreadyDefined ? '' : `\n\n${definition}`;
+  const insert = marker + after + suffix;
+  const defStart = start + marker.length + after.length + (suffix ? suffix.length - 'definition'.length : 0);
+  const selection = alreadyDefined
+    ? { start: start + 2, end: start + marker.length - 1 }
+    : { start: defStart, end: defStart + 'definition'.length };
+  return mutation(body, start, body.length, insert, selection);
+}
+
+function nextFootnoteIndex(body: string): number {
+  let max = 0;
+  const pattern = /\[\^(\d+)\]/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(body))) {
+    max = Math.max(max, Number(match[1]));
+  }
+  return max + 1;
 }
 
 function applyInsert(
@@ -288,7 +362,7 @@ function mutation(
 }
 
 export function toggleTaskAt(draft: Draft, index: number): DraftEdit | null {
-  const pattern = /^[ \t]*- \[([ xX])\] /gm;
+  const pattern = /^[ \t]*(?:[-*+]|\d+\.) \[([ xX])\](?:[ \t]|$)/gm;
   let seen = 0;
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(draft.body))) {

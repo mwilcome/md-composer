@@ -16,7 +16,7 @@ import {
   indentLines,
   toggleTaskAt,
 } from './draft';
-import { loadDraft, saveDraft } from './draft-store';
+import { loadDocName, loadDraft, markdownFileName, saveDocName, saveDraft } from './draft-store';
 import { markdownToHtml } from './markdown-html';
 import { MARKUP_COMMAND_GROUPS, MarkupCommand, markupCommandById } from './markup-command';
 import { MdIcon } from './md-icon';
@@ -33,6 +33,7 @@ export class Composer {
   private readonly field = viewChild<ElementRef<HTMLTextAreaElement>>('field');
 
   protected readonly appTitle = appTitle;
+  protected readonly docName = signal(loadDocName());
   protected readonly draft = signal(loadDraft());
   protected readonly wide = signal(wideViewport());
   protected readonly previewOpen = signal(this.wide());
@@ -149,11 +150,19 @@ export class Composer {
 
   protected onPreviewClick(event: Event): void {
     const target = event.target;
-    if (!(target instanceof HTMLElement) || !target.classList.contains('task-check')) {
+    if (!(target instanceof HTMLElement)) {
       return;
     }
-    const index = Number(target.getAttribute('data-task'));
-    if (!Number.isFinite(index)) {
+    const box = target.closest('.task-check');
+    if (!(box instanceof HTMLElement)) {
+      return;
+    }
+    const marker = [...box.classList].find((name) => name.startsWith('task-i-'));
+    if (!marker) {
+      return;
+    }
+    const index = Number(marker.slice('task-i-'.length));
+    if (!Number.isInteger(index) || index < 0) {
       return;
     }
     const field = this.field()?.nativeElement;
@@ -181,6 +190,25 @@ export class Composer {
     if (!wasWide && wide) {
       this.previewOpen.set(true);
     }
+  }
+
+  protected onDocName(event: Event): void {
+    const field = event.target;
+    if (!(field instanceof HTMLInputElement)) {
+      return;
+    }
+    this.docName.set(field.value);
+    saveDocName(field.value);
+  }
+
+  protected downloadMarkdown(): void {
+    const blob = new Blob([this.draft().body], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = markdownFileName(this.docName());
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   protected async copyMarkdown(): Promise<void> {

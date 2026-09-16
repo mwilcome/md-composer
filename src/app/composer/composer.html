@@ -1,9 +1,16 @@
 <div class="composer" [class.mobile-preview]="mobilePane() === 'preview'">
   <header class="chrome">
-    <p class="brand" [attr.title]="appTitle">
+    <label class="brand" [attr.title]="appTitle">
       <span class="mark">md</span>
-      <span class="brand-name">Composer</span>
-    </p>
+      <input
+        class="doc-name"
+        type="text"
+        [value]="docName()"
+        maxlength="80"
+        aria-label="Document name"
+        (input)="onDocName($event)"
+      />
+    </label>
     <div class="pane-switch" role="tablist" aria-label="View">
       <button
         type="button"
@@ -56,6 +63,10 @@
         <span class="btn-label">Redo</span>
       </button>
       <span class="rule" aria-hidden="true"></span>
+      <button type="button" title="Download markdown" (click)="downloadMarkdown()">
+        <app-md-icon name="download" />
+        <span class="btn-label">Download</span>
+      </button>
       <button type="button" title="Copy markdown" (click)="copyMarkdown()">
         <app-md-icon name="copy" />
         <span class="btn-label">
