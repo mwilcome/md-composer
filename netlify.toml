@@ -1,0 +1,9 @@
+# Site URL (placeholder): https://md-composer.piousprogrammer.com
+[build]
+  command = "npm run build"
+  publish = "dist/md-composer/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
